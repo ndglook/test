@@ -15,7 +15,7 @@ class ClientProtocol(asyncio.Protocol):
         self.login = None
 
     def data_received(self, data: bytes):
-        decoded = data.decode()
+        decoded = data. decode()
         print(decoded)
 
         if self.login is None:
@@ -27,9 +27,9 @@ class ClientProtocol(asyncio.Protocol):
                     self.login = login_try
                     self.server.logins.append(login_try)
                     self.transport.write(
-                        f"Привет, {self.login}!/n/r last 10 messages {self.server.last_10_msgs}".encode()
+                        f"Привет, {self.login}!".encode()
                     )
-
+                    self.send_history()
                 else:
                     self.transport.write(
                         f"Привет, try another login!".encode()
@@ -42,12 +42,19 @@ class ClientProtocol(asyncio.Protocol):
         encoded = format_string.encode()
 
         for client in self.server.clients:
-            temp_last_10_messages=self.server.last_10_msgs
-            self.server.last_10_msgs.append(encoded)
-            while len(self.server.last_10_msgs)>10:
-                self.server.last_10_msgs.pop(0)
+            self.server.msgs_history.append(encoded)
+           # while len(self.server.last_10_msgs)>10:
+            #    self.server.last_10_msgs.pop(0)
             if client.login != self.login:
                 client.transport.write(encoded)
+
+
+    def send_history(self):
+        for i in range(10):
+            if len(self.server.msgs_history)>i:
+                history_msg=self.server.msgs_history[-10+i]+"/r/n"
+                self.transport.write(history_msg.encode())
+
 
     def connection_made(self, transport: transports.Transport):
         self.transport = transport
@@ -63,10 +70,13 @@ class Server:
     clients: list
     logins: list
     last_10_msgs: list
+    msgs_history: list
+
     def __init__(self):
         self.clients = []
         self.logins = []
         self.last_10_msgs=[]
+        self.msgs_history=[]
 
     def create_protocol(self):
         return ClientProtocol(self)
