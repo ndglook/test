@@ -51,8 +51,8 @@ class ClientProtocol(asyncio.Protocol):
 
     def send_history(self):
         for i in range(10):
-            if len(self.server.msgs_history)>i:
-                history_msg=self.server.msgs_history[-10+i]+"/r/n"
+            if len(self.server.msgs_history)>(9-i):
+                history_msg=str(self.server.msgs_history[-10+i])+"\r\n"
                 self.transport.write(history_msg.encode())
 
 
